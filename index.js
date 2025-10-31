@@ -1,13 +1,13 @@
 const express = require('express');
 const multer = require('multer');
-const fetch = require('node-fetch'); // fixed: explicitly import node-fetch v2
+const fetch = require('node-fetch'); // <-- explicitly import node-fetch v2
 const app = express();
 const upload = multer();
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// Serve HTML form
+// Serve simple HTML form
 app.get('/', (req, res) => {
   res.type('html').send(`<!doctype html>
 <html>
@@ -97,8 +97,9 @@ app.post('/upload', upload.single('file'), async (req, res) => {
     }
     if (!req.file) return res.status(400).json({ ok: false, error: 'No file uploaded' });
 
+    // Encode file to Base64
     const contentBase64 = req.file.buffer.toString('base64');
-    const branch = 'main'; // Change if your repo uses another branch
+    const branch = 'main'; // change if your repo uses another branch
     const apiUrl = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodeURIComponent(targetPath)}`;
 
     const ghHeaders = {
