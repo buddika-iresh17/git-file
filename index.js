@@ -1,6 +1,6 @@
 const express = require('express');
 const multer = require('multer');
-const fetch = require('node-fetch'); // <-- explicitly import node-fetch v2
+const fetch = require('node-fetch'); // node-fetch v2
 const app = express();
 const upload = multer();
 
@@ -18,35 +18,30 @@ app.get('/', (req, res) => {
 body{font-family:system-ui, -apple-system, "Segoe UI", Roboto, Arial; padding:24px; max-width:720px}
 label{display:block;margin:12px 0 6px}
 input, button, textarea {width:100%; padding:8px; box-sizing:border-box}
-.small{width:auto;display:inline-block}
 </style>
 </head>
 <body>
 <h2>GitHub File Uploader</h2>
-<p>Upload a file to a GitHub repository using a Personal Access Token (PAT).</p>
-
 <form id="frm">
 <label>GitHub Token (PAT)</label>
 <input id="token" name="token" placeholder="ghp_..." required>
 
-<label>Owner (username or organization)</label>
+<label>Owner</label>
 <input id="owner" name="owner" placeholder="your-username" required>
 
-<label>Repository name</label>
+<label>Repository</label>
 <input id="repo" name="repo" placeholder="repo-name" required>
 
-<label>Target path in repo (e.g. folder/file.txt)</label>
-<input id="targetPath" name="targetPath" placeholder="uploads/myfile.txt" required>
+<label>Target path in repo</label>
+<input id="targetPath" name="targetPath" placeholder="src/index.js" required>
 
 <label>Commit message</label>
-<input id="message" name="message" placeholder="Add file from web uploader" required>
+<input id="message" name="message" placeholder="Add file" required>
 
 <label>Choose file</label>
 <input id="file" type="file" required>
 
-<div style="margin-top:12px">
-<button type="submit">Upload to GitHub</button>
-</div>
+<button type="submit">Upload</button>
 </form>
 
 <pre id="out" style="margin-top:16px; white-space:pre-wrap; background:#f6f8fa; padding:12px;border-radius:6px"></pre>
@@ -59,26 +54,15 @@ frm.addEventListener('submit', async (e) => {
   e.preventDefault();
   out.textContent = 'Uploading...';
 
-  const token = document.getElementById('token').value.trim();
-  const owner = document.getElementById('owner').value.trim();
-  const repo = document.getElementById('repo').value.trim();
-  const targetPath = document.getElementById('targetPath').value.trim();
-  const message = document.getElementById('message').value.trim();
+  const fd = new FormData(frm);
   const fileInput = document.getElementById('file');
   if (!fileInput.files.length) return alert('Choose a file');
-
-  const fd = new FormData();
-  fd.append('token', token);
-  fd.append('owner', owner);
-  fd.append('repo', repo);
-  fd.append('targetPath', targetPath);
-  fd.append('message', message);
   fd.append('file', fileInput.files[0]);
 
   try {
     const resp = await fetch('/upload', { method: 'POST', body: fd });
-    const j = await resp.json();
-    out.textContent = JSON.stringify(j, null, 2);
+    const text = await resp.text();
+    out.textContent = text;
   } catch (err) {
     out.textContent = 'Error: ' + err.message;
   }
@@ -93,22 +77,21 @@ app.post('/upload', upload.single('file'), async (req, res) => {
   try {
     const { token, owner, repo, targetPath, message } = req.body;
     if (!token || !owner || !repo || !targetPath || !message) {
-      return res.status(400).json({ ok: false, error: 'Missing required fields' });
+      return res.status(400).type('text').send('Missing required fields ❌');
     }
-    if (!req.file) return res.status(400).json({ ok: false, error: 'No file uploaded' });
+    if (!req.file) return res.status(400).type('text').send('No file uploaded ❌');
 
-    // Encode file to Base64
     const contentBase64 = req.file.buffer.toString('base64');
-    const branch = 'main'; // change if your repo uses another branch
+    const branch = 'main';
     const apiUrl = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodeURIComponent(targetPath)}`;
 
     const ghHeaders = {
       'Authorization': 'token ' + token,
-      'User-Agent': 'gh-file-uploader-demo',
+      'User-Agent': 'gh-file-uploader',
       'Accept': 'application/vnd.github+json'
     };
 
-    // Check if file exists to update
+    // Check if file exists
     let sha = null;
     const getResp = await fetch(apiUrl + '?ref=' + branch, { method: 'GET', headers: ghHeaders });
     if (getResp.status === 200) {
@@ -116,6 +99,7 @@ app.post('/upload', upload.single('file'), async (req, res) => {
       sha = j.sha;
     }
 
+    // Upload file
     const body = { message, content: contentBase64, branch };
     if (sha) body.sha = sha;
 
@@ -126,14 +110,16 @@ app.post('/upload', upload.single('file'), async (req, res) => {
     });
 
     const putJson = await putResp.json();
-    if (!putResp.ok) return res.status(putResp.status).json({ ok: false, error: putJson });
+    if (!putResp.ok) return res.status(putResp.status).type('text').send('GitHub upload failed ❌');
 
-    return res.json({ ok: true, result: putJson });
+    // Success message output
+    const fileUrl = putJson.content?.url;
+    return res.type('text').send(`${fileUrl} successfully ✔️`);
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ ok: false, error: err.message });
+    return res.status(500).type('text').send('Server Error ❌ ' + err.message);
   }
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`Server running at http://localhost:${PORT}`));
