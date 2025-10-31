@@ -1,0 +1,17 @@
+{
+  "name": "gh-file-uploader",
+  "version": "1.0.0",
+  "description": "Simple web app to upload files to GitHub using token",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "manaofc",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "latest",
+    "express": "latest",
+    "multer": "latest",
+    "node-fetch": "latest"
+  }
+}
