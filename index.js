@@ -154,7 +154,7 @@ app.get('/', (req, res) => {
   <input id="file" type="file" required>
 
   <button type="submit">
-    🚀 GitHub ට Upload කරන්න
+    🚀 GitHub එකට Upload කරන්න
   </button>
 </form>
 
