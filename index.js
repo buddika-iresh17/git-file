@@ -122,7 +122,7 @@ app.get('/', (req, res) => {
 
 <pre id="out" style="margin-top:20px;"></pre>
 
-<footer>Devop by <span style="background:linear-gradient(90deg,red,orange,yellow,green,cyan,blue,violet);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:bold;">manaofc</span> ©2025</footer>
+<footer>Developer by <span style="background:linear-gradient(90deg,red,orange,yellow,green,cyan,blue,violet);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:bold;">manaofc</span> ©2025</footer>
 
 <script>
 const frm = document.getElementById('frm');
