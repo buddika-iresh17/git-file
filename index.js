@@ -1,3 +1,4 @@
+// index.js
 const express = require('express');
 const multer = require('multer');
 const fetch = require('node-fetch'); // node-fetch v2
@@ -7,7 +8,7 @@ const upload = multer();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// RGB styled HTML uploader
+// RGB styled HTML uploader with full Sinhala Help instructions
 app.get('/', (req, res) => {
   res.type('html').send(`<!doctype html>
 <html>
@@ -93,31 +94,68 @@ app.get('/', (req, res) => {
     color: #8b949e;
     font-size: 14px;
   }
+  #helpText {
+    display: none;
+    background:#161b22;
+    color:#58a6ff;
+    padding:15px;
+    border-radius:10px;
+    margin-bottom:20px;
+    text-align:left;
+  }
 </style>
 </head>
 <body>
 <h1>🌈 GitHub File Uploader</h1>
 
 <form id="frm">
-  <label>GitHub Token (PAT)</label>
+
+  <button type="button" id="helpBtn" style="margin-bottom:15px;">
+    ❓ Help
+  </button>
+
+  <div id="helpText">
+    <h3>GitHub File Upload Instructions</h3>
+    <ol>
+      <li><b>GitHub Token (PAT)</b> ලබාගැනීම:  
+        <ol type="a">
+          <li>GitHub වෙත log in වන්න.</li>
+          <li>Settings → Developer settings → Personal access tokens → Tokens (classic) යන්න.</li>
+          <li>“Generate new token” click කරන්න.</li>
+          <li>Required scopes: <b>repo</b> select කරන්න.</li>
+          <li>Token එක copy කරගෙන පහළ GitHub Token field එකට paste කරන්න.</li>
+        </ol>
+      </li>
+      <li><b>Owner</b> = ඔබේ GitHub username දාන්න.</li>
+      <li><b>Repository</b> = Upload කරන්න ඕන repo එකේ නම දාන්න.</li>
+      <li><b>Target Path</b> = Repo තුළ file save වන්නේ කොහෙද කියලා (උදා: src/index.js).</li>
+      <li><b>Commit Message</b> = File එක upload කිරීමේ message එක දාන්න (උදා: Add file).</li>
+      <li><b>File Choose</b> = Upload කරන්න ඕන file එක select කරන්න.</li>
+      <li>සියල්ල සම්පූර්ණයි නම් “🚀 GitHub ට Upload කරන්න” button එක click කරන්න.</li>
+    </ol>
+  </div>
+
+  <label>GitHub Token (PAT) *</label>
   <input id="token" name="token" placeholder="ghp_..." required>
 
-  <label>Owner</label>
+  <label>Owner (ඔබේ GitHub username) *</label>
   <input id="owner" name="owner" placeholder="your-username" required>
 
-  <label>Repository</label>
+  <label>Repository (repo-name) *</label>
   <input id="repo" name="repo" placeholder="repo-name" required>
 
-  <label>Target path in repo</label>
+  <label>Target path in repo (උදා: src/index.js) *</label>
   <input id="targetPath" name="targetPath" placeholder="src/index.js" required>
 
-  <label>Commit message</label>
+  <label>Commit message *</label>
   <input id="message" name="message" placeholder="Add file" required>
 
-  <label>Choose file</label>
+  <label>Choose file *</label>
   <input id="file" type="file" required>
 
-  <button type="submit">🚀 Upload to GitHub</button>
+  <button type="submit">
+    🚀 GitHub ට Upload කරන්න
+  </button>
 </form>
 
 <pre id="out" style="margin-top:20px;"></pre>
@@ -127,6 +165,12 @@ app.get('/', (req, res) => {
 <script>
 const frm = document.getElementById('frm');
 const out = document.getElementById('out');
+const helpBtn = document.getElementById('helpBtn');
+const helpText = document.getElementById('helpText');
+
+helpBtn.addEventListener('click', () => {
+  helpText.style.display = helpText.style.display === 'none' ? 'block' : 'none';
+});
 
 frm.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -190,7 +234,6 @@ app.post('/upload', upload.single('file'), async (req, res) => {
     const putJson = await putResp.json();
     if (!putResp.ok) return res.status(putResp.status).type('text').send('GitHub upload failed ❌');
 
-    // ✅ Final Output (HTML clickable + copyable)
     const fileHtmlUrl = putJson.content?.html_url;
     return res.type('html').send(`<a href="${fileHtmlUrl}" target="_blank">${fileHtmlUrl}</a>\n\nsuccessfully✔️`);
   } catch (err) {
@@ -200,4 +243,4 @@ app.post('/upload', upload.single('file'), async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🌈 RGB GitHub Uploader running at http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(\`🌈 RGB GitHub Uploader running at http://localhost:\${PORT}\`));
